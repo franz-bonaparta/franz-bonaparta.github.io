@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@franz</title>
+
+<link rel="icon" type="image/png" href="logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#030305;
+  --surface:rgba(255,255,255,0.02);
+  --surface-hover:rgba(255,255,255,0.05);
+  --border:rgba(255,255,255,0.04);
+  --border-hover:rgba(255,255,255,0.12);
+  --text:#f4f4f7;
+  --sub:#626272;
+  --sub2:#9292a2;
+  --blur-value: 40px;
+}
+
+html{
+  scroll-behavior:smooth;
+  scrollbar-gutter: stable both-edges;
+  overflow-y: scroll;
+}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  letter-spacing:-0.01em;
+}
+
+/* ─── INTERFEJS APLIKACJI (TRANZYCJA) ─── */
+.app-container {
+  opacity: 0;
+  transform: scale(0.97);
+  filter: blur(10px);
+  transition: opacity 1.4s cubic-bezier(0.25, 1, 0.5, 1), 
+              transform 1.4s cubic-bezier(0.25, 1, 0.5, 1), 
+              filter 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.app-container.ready {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+}
+
+/* ─── FULLSCREEN INTRO VIDEO ─── */
+#intro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
+  z-index: 9999;
+  background: #000000;
+  overflow: hidden;
+  transition: opacity 1.2s cubic-bezier(0.7, 0, 0.3, 1),
+              filter 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+}
+#intro.out {
+  opacity: 0;
+  filter: blur(15px);
+  pointer-events: none;
+}
+#intro video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+/* ─── STACJONARNA NAWIGACJA GÓRNA ─── */
+nav{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:100;
+  padding:1.2rem 2rem;
+  background:rgba(3,3,5,0.4);
+  backdrop-filter:blur(var(--blur-value));
+  -webkit-backdrop-filter:blur(var(--blur-value));
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:center;
+}
+.nav-links{display:flex;gap:8px}
+.nav-link{
+  font-size:13px;font-weight:600;color:var(--sub);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  text-decoration:none;padding:8px 24px;border-radius:20px;
+  background:none;border:1px solid transparent;font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .3s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor:pointer;
+}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+.nav-link.active{
+  color:var(--text);
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(255,255,255,0.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* ─── SYSTEM WARSTW (PAGES) ─── */
+.page{
+  display:none;
+  padding-top:120px;
+  width:100%;
+  opacity:0;
+  transform:translateY(12px);
+  transition:opacity .4s cubic-bezier(0.25, 1, 0.5, 1), transform .4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.page.visible{
+  display:block;
+}
+.page.active{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.home-wrap, .cat-page-wrap {
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  box-sizing: border-box;
+}
+
+.home-hero{
+  padding:4rem 0 3rem;
+  text-align:center;
+}
+.hero-title{
+  font-size:clamp(40px,7.5vw,68px);
+  font-weight:700;letter-spacing:-0.04em;
+  line-height:1.05;margin-bottom:1.5rem;
+  color:var(--text);
+}
+.hero-title em{
+  font-style:normal;
+  font-weight:300;
+  color:var(--sub2);
+}
+.hero-sub{
+  font-size:15px;color:var(--sub);line-height:1.7;
+  max-width:540px;margin:0 auto;font-weight:400;
+}
+
+/* statystyki */
+.stats-row{
+  display:flex;gap:12px;margin-bottom:4.5rem;
+}
+.stat-item{
+  flex:1;padding:1.2rem;
+  border:1px solid var(--border);
+  background:var(--surface);
+  backdrop-filter:blur(var(--blur-value));
+  -webkit-backdrop-filter:blur(var(--blur-value));
+  border-radius:14px;
+  text-align:center;
+}
+.stat-num{
+  font-size:26px;font-weight:600;color:var(--text);
+  line-height:1;margin-bottom:4px;
+}
+.stat-label{font-size:10px;color:var(--sub);letter-spacing:.05em;text-transform:uppercase;font-weight:600;}
+
+/* kafelki filarów głównych */
+.filar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 4rem;
+}
+.filar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(var(--blur-value));
+  -webkit-backdrop-filter: blur(var(--blur-value));
+  padding: 5rem 2rem;
+  border-radius: 24px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.filar-card:hover {
+  transform: translateY(-4px);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+}
+.filar-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+/* huby list wewnątrz technologii */
+.cat-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2rem;
+}
+.cat-row-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.6rem 2rem;
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--surface);
+  backdrop-filter: blur(var(--blur-value));
+  -webkit-backdrop-filter: blur(var(--blur-value));
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.cat-row-card:hover {
+  transform: translateX(4px);
+  border-color: var(--border-hover);
+  background: var(--surface-hover);
+}
+
+.cat-row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 75%;
+}
+.cat-row-badge {
+  font-size:12px;
+  font-weight: 600;
+  color: var(--sub2);
+}
+.cat-row-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.cat-row-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cat-row-action {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sub);
+}
+.cat-row-arrow {
+  font-size: 13px;
+  color: var(--sub);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.cat-row-card:hover .cat-row-arrow {
+  color: var(--text);
+  transform: translateX(4px);
+}
+
+/* podstrony list plików i wideo */
+.cat-page-header{
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+  width: 100%;
+}
+.back-btn{
+  font-size:13px;color:var(--sub2);cursor:pointer;
+  background:none;border:none;padding:0;
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:1.5rem;font-family:'Plus Jakarta Sans',sans-serif;
+  transition:color .2s;
+}
+.back-btn:hover{color:var(--text)}
+.cat-page-title{
+  font-size:32px;font-weight:700;letter-spacing:-0.03em;color:var(--text);
+}
+
+.topic-list{padding:0 0 6rem; width: 100%;}
+
+/* wiersz pdf */
+.topic-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1.5rem;padding:1.4rem 1.6rem;
+  border:1px solid var(--border);
+  background:var(--surface);
+  backdrop-filter:blur(var(--blur-value));
+  -webkit-backdrop-filter:blur(var(--blur-value));
+  border-radius:16px;
+  transition:all .3s cubic-bezier(0.25, 1, 0.5, 1);
+  margin-bottom:8px;
+}
+.topic-row:hover{
+  background:var(--surface-hover);
+  border-color:var(--border-hover);
+}
+.topic-name{
+  font-size:15px;font-weight:600;color:var(--text);
+  margin-bottom:4px;letter-spacing:-0.01em;
+}
+.topic-meta{font-size:13px;color:var(--sub2);line-height:1.5;font-weight:300}
+
+.dl-btn{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:500;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  color:var(--text);text-decoration:none;
+  border:1px solid var(--border-hover);
+  padding:8px 16px;border-radius:10px;
+  transition:all .2s;
+  background:rgba(255,255,255,0.02);white-space:nowrap;
+}
+.dl-btn svg{width:13px;height:13px;}
+.dl-btn:hover{
+  background:var(--text);color:var(--bg);
+  border-color:var(--text);
+}
+
+/* akordeon wideo */
+.video-row{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+  backdrop-filter:blur(var(--blur-value));
+  -webkit-backdrop-filter:blur(var(--blur-value));
+  margin-bottom:10px;
+  overflow:hidden;
+  transition:all .4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.video-row:hover{
+  border-color:var(--border-hover);
+}
+.video-row.open{
+  border-color:rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.01);
+}
+.video-trigger{
+  width:100%;display:flex;align-items:center;gap:16px;
+  padding:1.4rem 1.6rem;cursor:pointer;
+  background:none;border:none;text-align:left;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.vplay{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,0.03);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--sub2);
+  transition:all .3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.video-trigger:hover .vplay{background:rgba(255,255,255,0.06);color:var(--text)}
+.video-row.open .vplay{background:var(--text);color:var(--bg)}
+.vplay svg{width:11px;height:11px;margin-left:2px}
+
+.vdur{
+  margin-left:auto;flex-shrink:0;
+  font-size:12px;color:var(--sub);white-space:nowrap;
+  font-weight: 500;
+}
+.video-panel{
+  max-height:0;overflow:hidden;
+  transition:max-height .5s cubic-bezier(0.25, 1, 0.5, 1), opacity .3s;
+  opacity:0;
+}
+.video-row.open .video-panel{max-height:560px;opacity:1}
+.video-inner{padding:0 1.6rem 1.6rem 1.6rem;}
+.video-inner video{
+  width:100%;border-radius:12px;
+  background:#000;display:block;
+  border:1px solid var(--border);
+}
+
+/* media queries rwd */
+@media(max-width:640px){
+  .filar-grid {grid-template-columns: 1fr; gap: 12px;}
+  .cat-row-card {padding: 1.4rem 1.5rem;}
+  .cat-row-right {display: none;}
+  .cat-row-left {max-width: 100%;}
+  .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  nav{padding:1rem}
+  .page{padding-top:90px}
+  .home-wrap, .cat-page-wrap {padding: 0 1.2rem;}
+}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <video id="introVideo" autoplay muted playsinline>
+    <source src="intro.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div id="app" class="app-container">
+
+  <nav>
+    <div class="nav-links">
+      <button class="nav-link active" id="btn-home" onclick="go('home')">Główna</button>
+      <button class="nav-link" id="btn-win-hub" onclick="go('win-hub')">Windows</button>
+      <button class="nav-link" id="btn-linux-hub" onclick="go('linux-hub')">Linux</button>
+    </div>
+  </nav>
+
+  <div id="home" class="page visible active">
+  <div class="home-wrap">
+    <div class="home-hero">
+      <h1 class="hero-title">Notatki <em>Egzaminacyjne</em></h1>
+      <p class="hero-sub">Zestaw profesjonalnych materiałów teoretycznych oraz praktycznych przygotowany pod kątem wytycznych egzaminu INF.02.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-num">29</div><div class="stat-label">tematów</div></div>
+      <div class="stat-item"><div class="stat-num">17</div><div class="stat-label">wideo</div></div>
+      <div class="stat-item"><div class="stat-num">2</div><div class="stat-label">środowiska</div></div>
+      <div class="stat-item"><div class="stat-num">PDF</div><div class="stat-label">zasoby</div></div>
+    </div>
+
+    <div class="filar-grid">
+      <div class="filar-card" onclick="go('win-hub')">
+        <h2 class="filar-title">Windows</h2>
+      </div>
+
+      <div class="filar-card" onclick="go('linux-hub')">
+        <h2 class="filar-title">Linux</h2>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div id="win-hub" class="page">
+  <div class="home-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('home')">← powrót do głównej</button>
+      <h2 class="cat-page-title">Technologie Windows</h2>
+    </div>
+
+    <div class="cat-list-container">
+      <a class="cat-row-card" onclick="go('win-s')" href="#">
+        <div class="cat-row-left">
+          <span class="cat-row-badge">12 opracowań</span>
+          <div class="cat-row-title">Windows Server</div>
+        </div>
+        <div class="cat-row-right">
+          <span class="cat-row-action">Notatki PDF</span>
+          <span class="cat-row-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="cat-row-card" onclick="go('win-w')" href="#">
+        <div class="cat-row-left">
+          <span class="cat-row-badge">5 opracowań</span>
+          <div class="cat-row-title">Windows Client</div>
+        </div>
+        <div class="cat-row-right">
+          <span class="cat-row-action">Notatki PDF</span>
+          <span class="cat-row-arrow">→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  </div>
+
+  <div id="linux-hub" class="page">
+  <div class="home-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('home')">← powrót do głównej</button>
+      <h2 class="cat-page-title">Oprogramowanie Linux</h2>
+    </div>
+
+    <div class="cat-list-container">
+      <a class="cat-row-card" onclick="go('linux-s')" href="#">
+        <div class="cat-row-left">
+          <span class="cat-row-badge">17 wykładów</span>
+          <div class="cat-row-title">Linux Server</div>
+        </div>
+        <div class="cat-row-right">
+          <span class="cat-row-action">Kurs Wideo</span>
+          <span class="cat-row-arrow">→</span>
+        </div>
+      </a>
+
+      <a class="cat-row-card" onclick="go('linux-w')" href="#">
+        <div class="cat-row-left">
+          <span class="cat-row-badge">6 opracowań</span>
+          <div class="cat-row-title">Linux Workstation</div>
+        </div>
+        <div class="cat-row-right">
+          <span class="cat-row-action">Notatki PDF</span>
+          <span class="cat-row-arrow">→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  </div>
+
+  <div id="win-s" class="page">
+  <div class="cat-page-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('win-hub')">← powrót do Windows</button>
+      <h2 class="cat-page-title">Windows Server</h2>
+    </div>
+    <div class="topic-list" id="list-win-s"></div>
+  </div>
+  </div>
+
+  <div id="win-w" class="page">
+  <div class="cat-page-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('win-hub')">← powrót do Windows</button>
+      <h2 class="cat-page-title">Windows Client</h2>
+    </div>
+    <div class="topic-list" id="list-win-w"></div>
+  </div>
+  </div>
+
+  <div id="linux-s" class="page">
+  <div class="cat-page-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('linux-hub')">← powrót do Linux</button>
+      <h2 class="cat-page-title">Linux Server</h2>
+    </div>
+    <div class="topic-list" id="list-linux-s"></div>
+  </div>
+  </div>
+
+  <div id="linux-w" class="page">
+  <div class="cat-page-wrap">
+    <div class="cat-page-header">
+      <button class="back-btn" onclick="go('linux-hub')">← powrót do Linux</button>
+      <h2 class="cat-page-title">Linux Workstation</h2>
+    </div>
+    <div class="topic-list" id="list-linux-w"></div>
+  </div>
+  </div>
+
+</div>
+
+<script>
+/* ── SYSTEM BAZY DANYCH ── */
+const pdfData = {
+  'win-s':[
+    {name:'Podstawy systemu',meta:'Instalacja, role, funkcje, konfiguracja IP',file:'pdf/win-s-podstawy.pdf'},
+    {name:'Zapora sieciowa',meta:'Reguły przychodzące/wychodzące, blokowanie portów',file:'pdf/win-s-zapora.pdf'},
+    {name:'IIS',meta:'Serwer WWW, hostowanie strony testowej',file:'pdf/win-s-iis.pdf'},
+    {name:'FTP',meta:'Serwer plików, izolowane foldery dla użytkowników',file:'pdf/win-s-ftp.pdf'},
+    {name:'gpedit — Zasady grup',meta:'Blokowanie Panelu Sterowania, CMD, pendrive, zmiana tapety',file:'pdf/win-s-gpedit.pdf'},
+    {name:'regedit — Rejestr',meta:'Ręczna modyfikacja kluczy systemowych',file:'pdf/win-s-regedit.pdf'},
+    {name:'DNS',meta:'Strefy do przodu i wstecz, rekordy A i CNAME',file:'pdf/win-s-dns.pdf'},
+    {name:'Routing oraz NAT',meta:'Serwer jako router, udostępnianie Internetu dla LAN',file:'pdf/win-s-nat.pdf'},
+    {name:'DHCP',meta:'Zakresy, wykluczenia, czas dzierżawy, rezerwacje MAC',file:'pdf/win-s-dhcp.pdf'},
+    {name:'Skrypt',meta:'Skrypty automatyzujące .bat / PowerShell',file:'pdf/win-s-skrypt.pdf'},
+    {name:'NIC Teaming',meta:'Łączenie kart sieciowych w jeden interfejs',file:'pdf/win-s-nic.pdf'},
+    {name:'Active Directory',meta:'Domena, Jednostki Organizacyjne, użytkownicy, grupy',file:'pdf/win-s-ad.pdf'},
+  ],
+  'win-w':[
+    {name:'Podstawy stacji roboczej',meta:'Domena AD, adresacja IP, zasoby, uprawnienia NTFS',file:'pdf/win-w-podstawy.pdf'},
+    {name:'Polecenie net',meta:'net user, net localgroup, net share w CMD',file:'pdf/win-w-net.pdf'},
+    {name:'Zapora sieciowa',meta:'Zabezpieczenia i reguły na systemie klienckim',file:'pdf/win-w-zapora.pdf'},
+    {name:'Skrypt',meta:'Pliki wsadowe .bat pod system kliencki',file:'pdf/win-w-skrypt.pdf'},
+    {name:'gpedit — Zasady lokalne',meta:'Ograniczenia uprawnień użytkownika lokalnego',file:'pdf/win-w-gpedit.pdf'},
+  ],
+  'linux-w':[
+    {name:'Podstawy stacji roboczej',meta:'Użytkownicy, uprawnienia, chmod, chown',file:'pdf/linux-w-podstawy.pdf'},
+    {name:'Skrypt Bash',meta:'Automatyzacja zadań użytkownika',file:'pdf/linux-w-skrypt.pdf'},
+    {name:'Polecenie find',meta:'Wyszukiwanie plików według nazwy, rozmiaru, uprawnień',file:'pdf/linux-w-find.pdf'},
+    {name:'Polecenie timedatectl',meta:'Czas systemowy i strefa czasowa',file:'pdf/linux-w-timedatectl.pdf'},
+    {name:'Polecenie ln',meta:'Dowiązania symboliczne (ln -s) i twarde',file:'pdf/linux-w-ln.pdf'},
+    {name:'Polecenie tar',meta:'Archiwa i kompresja .tar.gz',file:'pdf/linux-w-tar.pdf'},
+  ],
+};
+
+const videoData = [
+  {name:'Zarządzanie użytkownikami i grupami w Linux',dur:'03:52',file:'video/linux-s-uzytkownicy.mp4'},
+  {name:'Polityka haseł',dur:'05:14',file:'video/linux-s-hasla.mp4'},
+  {name:'Uprawnienia do plików i katalogów. Zmiana właściciela i grupy',dur:'04:38',file:'video/linux-s-uprawnienia.mp4'},
+  {name:'Skrypt Bash: podstawy',dur:'01:31',file:'video/linux-s-bash-podstawy.mp4'},
+  {name:'Skrypt Bash: pętla for',dur:'03:30',file:'video/linux-s-bash-for.mp4'},
+  {name:'Skrypt Bash: zmienne',dur:'02:09',file:'video/linux-s-bash-zmienne.mp4'},
+  {name:'Skrypt Bash: parametry',dur:'03:52',file:'video/linux-s-bash-parametry.mp4'},
+  {name:'Skrypt Bash: instrukcje warunkowe',dur:'04:21',file:'video/linux-s-bash-if.mp4'},
+  {name:'Konfiguracja interfejsu sieciowego w Netplan',dur:'05:45',file:'video/linux-s-netplan.mp4'},
+  {name:'Konfiguracja serwera HTTP (Apache2)',dur:'05:38',file:'video/linux-s-apache.mp4'},
+  {name:'Konfiguracja serwera DHCP',dur:'04:49',file:'video/linux-s-dhcp.mp4'},
+  {name:'Konfiguracja serwera Samba',dur:'05:44',file:'video/linux-s-samba.mp4'},
+  {name:'Konfiguracja serwera FTP',dur:'05:24',file:'video/linux-s-ftp.mp4'},
+  {name:'Konfiguracja serwera SSH',dur:'03:42',file:'video/linux-s-ssh.mp4'},
+  {name:'Konfiguracja serwera DNS (Bind9)',dur:'04:34',file:'video/linux-s-dns.mp4'},
+  {name:'Tworzenie, montowanie i formatowanie partycji',dur:'02:32',file:'video/linux-s-partycje.mp4'},
+  {name:'Dodatkowe narzędzia na egzaminie: mc, net-tools, nmap',dur:'02:31',file:'video/linux-s-narzedzia.mp4'},
+];
+
+/* ── GENEROWANIE LIST PDF ── */
+const dlSvg=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10"/></svg>`;
+
+['win-s','win-w','linux-w'].forEach(cat=>{
+  document.getElementById('list-'+cat).innerHTML=
+    pdfData[cat].map(t=>`
+      <div class="topic-row">
+        <div><div class="topic-name">${t.name}</div><div class="topic-meta">${t.meta}</div></div>
+        <a class="dl-btn" href="${t.file}" download>${dlSvg}</a>
+      </div>`).join('');
+});
+
+/* ── GENEROWANIE LIST WIDEO ── */
+const playSvg=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.5l8 4.5-8 4.5z"/></svg>`;
+
+document.getElementById('list-linux-s').innerHTML=
+  videoData.map((t,i)=>`
+    <div class="video-row" id="vrow-${i}">
+      <button class="video-trigger" onclick="toggleVideo(${i})">
+        <div class="vplay">${playSvg}</div>
+        <div style="flex:1;text-align:left">
+          <div class="topic-name">${t.name}</div>
+        </div>
+        <div class="vdur">${t.dur}</div>
+      </button>
+      <div class="video-panel" id="vpanel-${i}">
+        <div class="video-inner">
+          <video id="vid-${i}" controls preload="none">
+            <source src="${t.file}" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>`).join('');
+
+function toggleVideo(i){
+  const row=document.getElementById('vrow-'+i);
+  const vid=document.getElementById('vid-'+i);
+  const isOpen=row.classList.contains('open');
+
+  document.querySelectorAll('.video-row.open').forEach(r=>{
+    r.classList.remove('open');
+    r.querySelector('video').pause();
+  });
+
+  if(!isOpen){
+    row.classList.add('open');
+    vid.play().catch(()=>{});
+  }
+}
+
+/* ── TRANZYCJA PODSTRON ── */
+function go(id){
+  const targetPage = document.getElementById(id);
+  const activePages = document.querySelectorAll('.page.visible');
+  
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  if(id === 'home') document.getElementById('btn-home').classList.add('active');
+  else if(['win-hub','win-s','win-w'].includes(id)) document.getElementById('btn-win-hub').classList.add('active');
+  else if(['linux-hub','linux-s','linux-w'].includes(id)) document.getElementById('btn-linux-hub').classList.add('active');
+
+  setTimeout(() => {
+    activePages.forEach(p => p.classList.remove('visible'));
+    targetPage.classList.add('visible');
+    
+    targetPage.offsetWidth; 
+    
+    targetPage.classList.add('active');
+    window.scrollTo(0,0);
+  }, 140);
+}
+
+document.querySelectorAll('.cat-list-container a').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+
+/* ── AKTYWACJA WYJŚCIA Z INTRO ── */
+const introVideo = document.getElementById('introVideo');
+const introSection = document.getElementById('intro');
+const appContainer = document.getElementById('app');
+
+function dismissIntro() {
+  introSection.classList.add('out');
+  
+  setTimeout(() => {
+    appContainer.classList.add('ready');
+  }, 150);
+
+  setTimeout(() => introSection.remove(), 1200);
+}
+
+if(introVideo) {
+  introVideo.onended = dismissIntro;
+  introVideo.onerror = dismissIntro; 
+}
+</script>
+</body>
+</html>
